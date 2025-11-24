@@ -5,6 +5,7 @@ export default {
         green: '#198754',
         textDefault: '#495057',
         background_gray_100: '#E9ECEF',
+        background_gray_300: '#E0E0E0',
 
         risk_cardiovascular: '#D7263D',
         risk_cardiovascular_light: '#F6C2C8',

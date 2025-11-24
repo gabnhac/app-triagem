@@ -2,20 +2,33 @@ import { Icon } from '@/components/Icon';
 import { Input } from '@/components/Input';
 import { InputDate } from '@/components/InputDate';
 import { InputSelect } from '@/components/InputSelect/input';
+import { OptionType } from '@/components/InputSelect/input.types';
+import { RiskLegendResultProps } from '@/components/RiskLegendResult/index.types';
+import { useAppStore } from '@/store/useAppStore';
 import theme from '@/theme';
+import { calculateRiskAsma } from '@/utils/Risks/asma/asma';
 import { calculateRiskCardiovascularAndDislipidemia, calculateScoreCardiovascularAndDislipidemia } from '@/utils/Risks/cardiovascularDislipidemia/cardiovascularAndDislipidemia';
 import { calculateRiskDiabetesTipo2, calculateScoreDiabetesTipo2 } from '@/utils/Risks/diabetesTipo2/diabetesTipo2';
+import { calculateRiskDorCronica } from '@/utils/Risks/dorCronica/dorCronica';
+import { calculateRiskDPOC } from '@/utils/Risks/dpoc/dpoc';
 import { calculateRiskHipertensao } from '@/utils/Risks/hipertensao/hipertensao';
 import { calculateRiskObesidade, calculateScoreObesidade } from '@/utils/Risks/obesidade/obesidade';
 import { calculateAge } from '@/utils/calculateAge';
 import { calculateIMC } from '@/utils/calculateIMC';
 import { formatBloodPressure } from '@/utils/formatBloodPressure';
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { FormState, FormStateError } from './index.types';
 
 export default function InitialForm() {
+    const router = useRouter();
+
+    const {
+        setResultData
+    } = useAppStore();
+
     const [formState, setFormState] = useState<FormState>({
         birthDate: (() => {
             const d = new Date();
@@ -34,7 +47,7 @@ export default function InitialForm() {
         waistCircumference: '',
         eatVegetablesEveryDay: null,
         practiceExercise: null,
-        familyWithDiabetes: null,
+        familyWithDiabetes: 0,
         highGlucose: null,
         familyWithObesity: null,
         isAlcoholic: null,
@@ -162,6 +175,8 @@ export default function InitialForm() {
             return;
         }
 
+        let params: RiskLegendResultProps[] = [];
+
         setFormErrors({} as FormStateError)
 
         const age = calculateAge(formState.birthDate);
@@ -189,6 +204,12 @@ export default function InitialForm() {
         })
         const riskCardiovascular = calculateRiskCardiovascularAndDislipidemia(scoreCardiovascular, formState.isMan || true, true);
 
+        params.push({
+            category: riskCardiovascular.category,
+            score: riskCardiovascular.score,
+            riskIn10Years: riskCardiovascular.riskIn10Years,
+            type: 'cardiovascular'
+        });
 
         const scoreDislipidemia = calculateScoreCardiovascularAndDislipidemia({
             age,
@@ -203,6 +224,12 @@ export default function InitialForm() {
         })
         const riskDislipidemia = calculateRiskCardiovascularAndDislipidemia(scoreDislipidemia, formState.isMan || true, false);
 
+        params.push({
+            category: riskDislipidemia.category,
+            score: riskDislipidemia.score,
+            riskIn10Years: riskDislipidemia.riskIn10Years,
+            type: 'dislipidemia'
+        });
 
         const scoreDiabetesTipo2 = calculateScoreDiabetesTipo2({
             age,
@@ -216,7 +243,15 @@ export default function InitialForm() {
             isMan: formState.isMan || true,
         })
         const riskDiabetesTipo2 = calculateRiskDiabetesTipo2(scoreDiabetesTipo2);
+        console.log("riskDiabetesTipo2", riskDiabetesTipo2);
 
+        params.push({
+            category: riskDiabetesTipo2.classification,
+            score: riskDiabetesTipo2.score,
+            probability: riskDiabetesTipo2.probability,
+            type: 'diabetes_tipo2',
+            tip: riskDiabetesTipo2.tip
+        });
 
         const scoreObesidade = calculateScoreObesidade({
             dietIsHealthy: formState.eatVegetablesEveryDay || true,
@@ -227,14 +262,83 @@ export default function InitialForm() {
         })
         const riskObesidade = calculateRiskObesidade(scoreObesidade);
 
+        params.push({
+            category: riskObesidade.classification,
+            score: riskObesidade.score,
+            type: 'obesidade'
+        });
+
         const riskHipertensao = calculateRiskHipertensao(bloodPressureCalculated);
 
-        console.log("RISCO CARDIOVASCULAR", riskCardiovascular);
-        console.log("RISCO DISLIPIDEMIA", riskDislipidemia);
-        console.log("RISCO DIABETES TIPO 2", riskDiabetesTipo2);
-        console.log("RISCO OBESIDADE", riskObesidade);
-        console.log("RISCO HIPERTENSAO", riskHipertensao);
+        params.push({
+            category: riskHipertensao.classification,
+            tip: riskHipertensao.tip,
+            type: 'hipertensao'
+        });
 
+        const riskDpoc = calculateRiskDPOC({
+            cat: formState.sumDPOC,
+            crisesDPOC: formState.crisesDPOC,
+            grauDispneia: formState.grauDispneia
+        });
+
+        params.push({
+            category: riskDpoc.category,
+            score: riskDpoc.score,
+            type: 'dpoc'
+        });
+
+        const riskAsma = calculateRiskAsma(formState.sumAsma);
+
+        params.push({
+            category: riskAsma.category,
+            score: riskAsma.score,
+            type: 'asma'
+        });
+
+        const riskDorCronica = calculateRiskDorCronica(formState.sumChronicPain);
+
+        params.push({
+            category: riskDorCronica.category,
+            score: riskDorCronica.score,
+            type: 'dor_cronica'
+        });
+
+        // console.log("SUM ASMA", formState.sumAsma);
+        // console.log("SUM DPOC", formState.sumDPOC);
+        // console.log("SUM DOR CRONICA", formState.sumChronicPain);
+
+        // console.log("RISCO CARDIOVASCULAR", riskCardiovascular);
+        // console.log("RISCO DISLIPIDEMIA", riskDislipidemia);
+        // console.log("RISCO DIABETES TIPO 2", riskDiabetesTipo2);
+        // console.log("RISCO OBESIDADE", riskObesidade);
+        // console.log("RISCO HIPERTENSAO", riskHipertensao);
+        // console.log("RISCO DPOC", riskDpoc);
+        // console.log("RISCO ASMA", riskAsma);
+        // console.log("RISCO DOR CRONICA", riskDorCronica);
+
+        setResultData(params);
+
+        router.push('/journey-form/result');
+    }
+
+    const options0to5 = [
+        { affirmative: '0' },
+        { affirmative: '1' },
+        { affirmative: '2' },
+        { affirmative: '3' },
+        { affirmative: '4' },
+        { affirmative: '5' },
+    ];
+
+    function handleSelectDPOC(prevItem: OptionType | null, item: OptionType) {
+        const add = Number(item.affirmative);
+        const subtract = Number(prevItem?.affirmative ?? 0);
+
+        setFormState(prev => ({
+            ...prev,
+            sumDPOC: prev.sumDPOC + add - subtract
+        }));
     }
 
     return (
@@ -254,7 +358,7 @@ export default function InitialForm() {
                         affirmative: 'Mulher',
                     }]}
                     statement='Informe seu sexo:'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Homem') {
                             setFormState(prev => ({
                                 ...prev,
@@ -276,7 +380,7 @@ export default function InitialForm() {
                         affirmative: 'Não',
                     }]}
                     statement='É tagabista?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -298,7 +402,7 @@ export default function InitialForm() {
                         affirmative: 'Não',
                     }]}
                     statement='Tem diabete?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -399,7 +503,7 @@ export default function InitialForm() {
                         affirmative: 'Não',
                     }]}
                     statement='A pressão arterial é tratada?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -443,7 +547,7 @@ export default function InitialForm() {
                         affirmative: 'Não',
                     }]}
                     statement='Pratica pelo menos 30 minutos de atividade?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -465,7 +569,7 @@ export default function InitialForm() {
                         affirmative: 'De vez em quando',
                     }]}
                     statement='Com que frequência come legumes, verduras, frutas e grãos?'
-                    onSelect={(item) => {
+                    onSelect={(previtem, item) => {
                         if (item.affirmative === 'Todos os dias') {
                             setFormState(prev => ({
                                 ...prev,
@@ -487,7 +591,7 @@ export default function InitialForm() {
                         affirmative: 'Não',
                     }]}
                     statement='Alguma vez você já apresentou glicose alta no sangue (por exemplo, em um exame médico de rotina, durante uma doença, durante a gravidez)?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -513,7 +617,7 @@ export default function InitialForm() {
                     }
                     ]}
                     statement='Algum membro de sua família ou parente próximo já foi diagnosticado com diabetes?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Não') {
                             setFormState(prev => ({
                                 ...prev,
@@ -551,7 +655,7 @@ export default function InitialForm() {
                     }
                     ]}
                     statement='É etilista?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -575,7 +679,7 @@ export default function InitialForm() {
                     }
                     ]}
                     statement='Histórico de obesidade na família?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
@@ -588,7 +692,6 @@ export default function InitialForm() {
                             }))
                         }
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
 
 
@@ -617,7 +720,7 @@ export default function InitialForm() {
                     },
                     ]}
                     statement='Selecione a opção que mais se assemelha ao seu caso:'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative.includes('Grau 0')) {
                             setFormState(prev => ({
                                 ...prev,
@@ -652,412 +755,51 @@ export default function InitialForm() {
                     }}
                 />
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Responda essa e as próximas perguntas com uma nota de 0 a 5, considerando o quanto cada situação se aplica a você. Você sente que tosse com frequência, mesmo quando não está gripado(a)?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Responda essa e as próximas perguntas com uma nota de 0 a 5, considerando o quanto cada situação se aplica a você. Você sente que tosse com frequência, mesmo quando não está gripado(a)?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Costuma perceber catarro, secreção ou muco acumulado no peito durante o dia?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Costuma perceber catarro, secreção ou muco acumulado no peito durante o dia?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Sente aperto, pressão ou desconforto no peito em momentos de repouso ou esforço leve?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Sente aperto, pressão ou desconforto no peito em momentos de repouso ou esforço leve?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Fica sem ar ou muito ofegante quando sobe uma ladeira, escadas ou anda por longas distâncias?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Fica sem ar ou muito ofegante quando sobe uma ladeira, escadas ou anda por longas distâncias?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Sua falta de ar interfere nas suas atividades diárias, como limpar a casa, cozinhar, trabalhar ou caminhar?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Sua falta de ar interfere nas suas atividades diárias, como limpar a casa, cozinhar, trabalhar ou caminhar?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Você se sente confiante em sair de casa, mesmo sabendo que pode ficar sem fôlego?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Você se sente confiante em sair de casa, mesmo sabendo que pode ficar sem fôlego?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='A DPOC atrapalha o seu sono, fazendo você acordar por falta de ar, tosse ou desconforto respiratório?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="A DPOC atrapalha o seu sono, fazendo você acordar por falta de ar, tosse ou desconforto respiratório?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
+
                 <InputSelect
-                    options={[
-                        {
-                            affirmative: '0',
-                        },
-                        {
-                            affirmative: '1',
-                        },
-                        {
-                            affirmative: '2',
-                        },
-                        {
-                            affirmative: '3',
-                        },
-                        {
-                            affirmative: '4',
-                        },
-                        {
-                            affirmative: '5',
-                        },
-                    ]}
-                    statement='Você sente pouca energia, cansaço ou fraqueza física na maior parte do tempo devido aos sintomas respiratórios?'
-                    onSelect={(item) => {
-                        if (item.affirmative === '1') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 1
-                            }))
-                        } else if (item.affirmative === '2') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 2
-                            }))
-                        } else if (item.affirmative === '3') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 3
-                            }))
-                        } else if (item.affirmative === '4') {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 4
-                            }))
-                        } else {
-                            setFormState(prev => ({
-                                ...prev,
-                                sumDPOC: prev.sumDPOC + 5
-                            }))
-                        }
-                    }}
+                    options={options0to5}
+                    statement="Você sente pouca energia, cansaço ou fraqueza física na maior parte do tempo devido aos sintomas respiratórios?"
+                    onSelect={(prevItem, item) => handleSelectDPOC(prevItem, item)}
                 />
                 <InputSelect
                     options={[
@@ -1075,7 +817,7 @@ export default function InitialForm() {
                         },
                     ]}
                     statement='Pense nos últimos 12 meses. Você teve algum episódio em que sua tosse, catarro ou falta de ar pioraram de forma súbita, exigindo medicação adicional ou atendimento médico? Marque a opção que mais se aproxima da sua realidade:'
-                    onSelect={(item) => {
+                    onSelect={(itemPrev, item) => {
                         if (item.affirmative.includes('Nenhuma crise')) {
                             setFormState(prev => ({
                                 ...prev,
@@ -1098,7 +840,6 @@ export default function InitialForm() {
                             }))
                         }
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
 
                 <View style={styles.titleWrapper}>
@@ -1118,15 +859,19 @@ export default function InitialForm() {
                         },
                     ]}
                     statement='Durante as últimas quatro semanas, você sentiu sintomas de asma, como tosse, chiado ou aperto no peito, mais de duas vezes por semana?'
-                    onSelect={(item) => {
+                    onSelect={(itemPrev, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
                                 sumAsma: prev.sumAsma + 1
                             }))
+                        } else {
+                            setFormState(prev => ({
+                                ...prev,
+                                sumAsma: Math.max(0, prev.sumAsma - 1)
+                            }))
                         }
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
                 <InputSelect
                     options={[
@@ -1139,15 +884,19 @@ export default function InitialForm() {
 
                     ]}
                     statement='Nos últimos 30 dias, você acordou durante a noite ou de madrugada por causa de sintomas da asma, como falta de ar, tosse ou chiado?'
-                    onSelect={(item) => {
+                    onSelect={(itemPrev, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
                                 sumAsma: prev.sumAsma + 1
                             }))
+                        } else {
+                            setFormState(prev => ({
+                                ...prev,
+                                sumAsma: Math.max(0, prev.sumAsma - 1)
+                            }))
                         }
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
                 <InputSelect
                     options={[
@@ -1160,15 +909,19 @@ export default function InitialForm() {
 
                     ]}
                     statement='A asma limitou suas atividades diárias (trabalho, escola, exercícios, tarefas domésticas ou lazer) em algum momento nas últimas quatro semanas?'
-                    onSelect={(item) => {
+                    onSelect={(itemPrev, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
                                 sumAsma: prev.sumAsma + 1
                             }))
+                        } else {
+                            setFormState(prev => ({
+                                ...prev,
+                                sumAsma: Math.max(0, prev.sumAsma - 1)
+                            }))
                         }
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
                 <InputSelect
                     options={[
@@ -1181,17 +934,20 @@ export default function InitialForm() {
 
                     ]}
                     statement='Você precisou usar sua medicação de alívio rápido (ex:bombinha) mais de duas vezes por semana nas últimas quatro semanas?'
-                    onSelect={(item) => {
+                    onSelect={(prevItem, item) => {
                         if (item.affirmative === 'Sim') {
                             setFormState(prev => ({
                                 ...prev,
                                 sumAsma: prev.sumAsma + 1
                             }))
+                        } else {
+                            setFormState(prev => ({
+                                ...prev,
+                                sumAsma: Math.max(0, prev.sumAsma - 1)
+                            }))
                         }
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
-
 
 
                 <View style={styles.titleWrapper}>
@@ -1203,336 +959,262 @@ export default function InitialForm() {
                 </View>
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Raramente',
-                        },
-                        {
-                            affirmative: 'Às vezes',
-                        },
-                        {
-                            affirmative: 'Frequentemente',
-                        },
-                        {
-                            affirmative: 'Sempre',
-                        },
-
+                        { affirmative: 'Raramente' },
+                        { affirmative: 'Às vezes' },
+                        { affirmative: 'Frequentemente' },
+                        { affirmative: 'Sempre' },
                     ]}
                     statement='Com que frequência você sente dor?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Às vezes')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Frequentemente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Às vezes') ? 1 :
+                                item.affirmative.includes('Frequentemente') ? 2 :
+                                    item.affirmative.includes('Sempre') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Às vezes') ? 1 :
+                                prevItem?.affirmative.includes('Frequentemente') ? 2 :
+                                    prevItem?.affirmative.includes('Sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Nunca',
-                        },
-                        {
-                            affirmative: 'Às vezes',
-                        },
-                        {
-                            affirmative: 'Quase sempre',
-                        },
-                        {
-                            affirmative: 'Sempre',
-                        },
+                        { affirmative: 'Nunca' },
+                        { affirmative: 'De vez em quando' },
+                        { affirmative: 'Muitas vezes' },
+                        { affirmative: 'Sempre' },
+                    ]}
+                    statement='Você sente queimação, choque ou formigamento?'
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('De vez em quando') ? 1 :
+                                item.affirmative.includes('Muitas vezes') ? 2 :
+                                    item.affirmative.includes('Sempre') ? 3 : 0
 
+                        const subtract =
+                            prevItem?.affirmative.includes('De vez em quando') ? 1 :
+                                prevItem?.affirmative.includes('Muitas vezes') ? 2 :
+                                    prevItem?.affirmative.includes('Sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
+                    }}
+                />
+
+                <InputSelect
+                    options={[
+                        { affirmative: 'Nunca' },
+                        { affirmative: 'Às vezes' },
+                        { affirmative: 'Quase sempre' },
+                        { affirmative: 'Sempre' },
                     ]}
                     statement='A dor atrapalha seu sono?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Às vezes')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Quase sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Às vezes') ? 1 :
+                                item.affirmative.includes('Quase sempre') ? 2 :
+                                    item.affirmative.includes('Sempre') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Às vezes') ? 1 :
+                                prevItem?.affirmative.includes('Quase sempre') ? 2 :
+                                    prevItem?.affirmative.includes('Sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Não',
-                        },
-                        {
-                            affirmative: 'Um pouco',
-                        },
-                        {
-                            affirmative: 'Bastante',
-                        },
-                        {
-                            affirmative: 'Muito',
-                        },
-
+                        { affirmative: 'Não' },
+                        { affirmative: 'Um pouco' },
+                        { affirmative: 'Bastante' },
+                        { affirmative: 'Muito' },
                     ]}
                     statement='A dor piora com o toque, frio, calor ou movimento?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Um pouco')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Bastante')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Muito')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Um pouco') ? 1 :
+                                item.affirmative.includes('Bastante') ? 2 :
+                                    item.affirmative.includes('Muito') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Um pouco') ? 1 :
+                                prevItem?.affirmative.includes('Bastante') ? 2 :
+                                    prevItem?.affirmative.includes('Muito') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Não',
-                        },
-                        {
-                            affirmative: 'Um pouco',
-                        },
-                        {
-                            affirmative: 'Muito',
-                        },
-                        {
-                            affirmative: 'Totalmente',
-                        },
-
+                        { affirmative: 'Não' },
+                        { affirmative: 'Um pouco' },
+                        { affirmative: 'Muito' },
+                        { affirmative: 'Totalmente' },
                     ]}
                     statement='A dor limita suas atividades do dia a dia?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Um pouco')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Muito')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Totalmente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Um pouco') ? 1 :
+                                item.affirmative.includes('Muito') ? 2 :
+                                    item.affirmative.includes('Totalmente') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Um pouco') ? 1 :
+                                prevItem?.affirmative.includes('Muito') ? 2 :
+                                    prevItem?.affirmative.includes('Totalmente') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Nunca',
-                        },
-                        {
-                            affirmative: 'Raramente',
-                        },
-                        {
-                            affirmative: 'Frequentemente',
-                        },
-                        {
-                            affirmative: 'Sempre',
-                        },
-
+                        { affirmative: 'Nunca' },
+                        { affirmative: 'Raramente' },
+                        { affirmative: 'Frequentemente' },
+                        { affirmative: 'Sempre' },
                     ]}
                     statement='Você sente dormência ou perda de sensibilidade na área da dor?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Raramente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Frequentemente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Raramente') ? 1 :
+                                item.affirmative.includes('Frequentemente') ? 2 :
+                                    item.affirmative.includes('Sempre') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Raramente') ? 1 :
+                                prevItem?.affirmative.includes('Frequentemente') ? 2 :
+                                    prevItem?.affirmative.includes('Sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Nunca',
-                        },
-                        {
-                            affirmative: 'Às vezes',
-                        },
-                        {
-                            affirmative: 'Frequentemente',
-                        },
-                        {
-                            affirmative: 'Sempre',
-                        },
-
+                        { affirmative: 'Nunca' },
+                        { affirmative: 'Às vezes' },
+                        { affirmative: 'Frequentemente' },
+                        { affirmative: 'Sempre' },
                     ]}
                     statement='Você tem sensação de peso, aperto ou pressão na área dolorida?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Às vezes')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Frequentemente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Às vezes') ? 1 :
+                                item.affirmative.includes('Frequentemente') ? 2 :
+                                    item.affirmative.includes('Sempre') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Às vezes') ? 1 :
+                                prevItem?.affirmative.includes('Frequentemente') ? 2 :
+                                    prevItem?.affirmative.includes('Sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Não',
-                        },
-                        {
-                            affirmative: 'Pouco',
-                        },
-                        {
-                            affirmative: 'Bastante',
-                        },
-                        {
-                            affirmative: 'Muito',
-                        },
-
+                        { affirmative: 'Não' },
+                        { affirmative: 'Pouco' },
+                        { affirmative: 'Bastante' },
+                        { affirmative: 'Muito' },
                     ]}
                     statement='A dor muda de intensidade durante o dia?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Pouco')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Bastante')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Muito')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Pouco') ? 1 :
+                                item.affirmative.includes('Bastante') ? 2 :
+                                    item.affirmative.includes('Muito') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Pouco') ? 1 :
+                                prevItem?.affirmative.includes('Bastante') ? 2 :
+                                    prevItem?.affirmative.includes('Muito') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Nunca',
-                        },
-                        {
-                            affirmative: 'Raramente',
-                        },
-                        {
-                            affirmative: 'Às vezes',
-                        },
-                        {
-                            affirmative: 'Sim, sempre',
-                        },
-
+                        { affirmative: 'Nunca' },
+                        { affirmative: 'Raramente' },
+                        { affirmative: 'Às vezes' },
+                        { affirmative: 'Sim, sempre' },
                     ]}
                     statement='A dor melhora com remédios comuns (como dipirona e paracetamol)?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Raramente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Às vezes')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Sim, sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Raramente') ? 1 :
+                                item.affirmative.includes('Às vezes') ? 2 :
+                                    item.affirmative.includes('Sim, sempre') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Raramente') ? 1 :
+                                prevItem?.affirmative.includes('Às vezes') ? 2 :
+                                    prevItem?.affirmative.includes('Sim, sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
+
                 <InputSelect
                     options={[
-                        {
-                            affirmative: 'Nunca',
-                        },
-                        {
-                            affirmative: 'Às vezes',
-                        },
-                        {
-                            affirmative: 'Frequentemente',
-                        },
-                        {
-                            affirmative: 'Sempre',
-                        },
-
+                        { affirmative: 'Nunca' },
+                        { affirmative: 'Às vezes' },
+                        { affirmative: 'Frequentemente' },
+                        { affirmative: 'Sempre' },
                     ]}
                     statement='A dor causa tristeza, irritação ou cansaço emocional?'
-                    onSelect={(item) => {
-                        if (item.affirmative.includes('Às vezes')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 1
-                            }))
-                        } else if (item.affirmative.includes('Frequentemente')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 2
-                            }))
-                        } else if (item.affirmative.includes('Sempre')) {
-                            setFormState(prev => ({
-                                ...prev,
-                                crisesDPOC: 3
-                            }))
-                        }
+                    onSelect={(prevItem, item) => {
+                        const add =
+                            item.affirmative.includes('Às vezes') ? 1 :
+                                item.affirmative.includes('Frequentemente') ? 2 :
+                                    item.affirmative.includes('Sempre') ? 3 : 0
+
+                        const subtract =
+                            prevItem?.affirmative.includes('Às vezes') ? 1 :
+                                prevItem?.affirmative.includes('Frequentemente') ? 2 :
+                                    prevItem?.affirmative.includes('Sempre') ? 3 : 0
+
+                        setFormState(prev => ({
+                            ...prev,
+                            sumChronicPain: prev.sumChronicPain + add - subtract
+                        }))
                     }}
-                    isError={formErros.familyWithObesityError}
                 />
             </View>
             <TouchableOpacity

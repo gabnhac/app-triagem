@@ -10,7 +10,7 @@ export function InputSelect({
     onSelect,
     isError = false
 }: InputSelectProps) {
-    const [selected, setSelected] = useState<OptionType | null>();
+    const [selected, setSelected] = useState<OptionType | null>(null);
 
     return (
         <View style={styles.wrapper} >
@@ -28,8 +28,8 @@ export function InputSelect({
                             borderColor: color,
                             backgroundColor: selected === item ? color : 'white'
                         }]} onPress={() => {
+                            onSelect(selected, item)
                             setSelected(item)
-                            onSelect(item)
 
                         }}>
                             <Text style={[styles.optionText, {

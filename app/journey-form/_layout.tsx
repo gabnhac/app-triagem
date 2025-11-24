@@ -1,17 +1,18 @@
 import { Stack } from 'expo-router';
 import React from 'react';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
   const { Screen } = Stack;
 
   return (
-    <Stack>
-      <Screen name='index' options={{
-        headerShown: false
-      }} />
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        animation: 'slide_from_right',
+      }}
+    >
+      <Screen name='index' />
+      <Screen name='result/index' />
     </Stack>
   );
 }

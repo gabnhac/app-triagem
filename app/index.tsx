@@ -27,7 +27,8 @@ export default function Presentation() {
       <Text style={styles.text}>Ao expandir um item, é possível visualizar os níveis de cada risco.</Text>
       <RiskLegend type='cardiovascular' isSelected={selected === 'cardiovascular'} onSelect={handleSelect} />
       <RiskLegend type='dislipidemia' isSelected={selected === 'dislipidemia'} onSelect={handleSelect} />
-      <RiskLegend type='asma_dpoc' isSelected={selected === 'asma_dpoc'} onSelect={handleSelect} />
+      <RiskLegend type='dpoc' isSelected={selected === 'dpoc'} onSelect={handleSelect} />
+      <RiskLegend type='asma' isSelected={selected === 'asma'} onSelect={handleSelect} />
       <RiskLegend type='diabetes_tipo2' isSelected={selected === 'diabetes_tipo2'} onSelect={handleSelect} />
       <RiskLegend type='hipertensao' isSelected={selected === 'hipertensao'} onSelect={handleSelect} />
       <RiskLegend type='obesidade' isSelected={selected === 'obesidade'} onSelect={handleSelect} />

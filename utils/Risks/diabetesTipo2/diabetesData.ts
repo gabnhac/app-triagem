@@ -4,7 +4,7 @@ import { DiabetesLevels } from "@/components/RiskLegend/types";
 export type RiskResultTypeDiabetesTipo2 = {
     classification: DiabetesLevels,
     score: number,
-    probability: string,
+    probability: string;
     tip: string,
 }
 
@@ -47,34 +47,34 @@ export const diabetesRiskLevels = [
         min: 0,
         max: 6,
         probability: "Cerca de 1 em cada 100 pessoas irá desenvolver a doença",
-        tip: "Orientações gerais de estilo de vida",
+        tip: "Orientações gerais de estilo de vida.",
     },
     {
         classification: "Levemente elevado",
         min: 7,
         max: 11,
         probability: "Cerca de 1 em cada 25 pessoas irá desenvolver a doença",
-        tip: "Incentivar avaliações periódicas",
+        tip: "Avaliações periódicas.",
     },
     {
         classification: "Moderado",
         min: 12,
         max: 14,
         probability: "Cerca de 1 em cada 6 pessoas irá desenvolver a doença",
-        tip: "Sugerir exame de glicemia e acompanhamento",
+        tip: "Exame de glicemia e acompanhamento.",
     },
     {
         classification: "Alto",
         min: 15,
         max: 20,
         probability: "Cerca de 1 em cada 3 pessoas irá desenvolver a doença",
-        tip: "Recomendação de avaliação médica e laboratorial urgente",
+        tip: "Avaliação médica e laboratorial urgente.",
     },
     {
         classification: "Muito alto",
         min: 21,
         max: Infinity,
         probability: "Cerca de 1 em cada 2 pessoas irá desenvolver a doença",
-        tip: "Encaminhamento prioritário para avaliação clínica",
+        tip: "Encaminhamento prioritário para avaliação clínica.",
     },
 ];

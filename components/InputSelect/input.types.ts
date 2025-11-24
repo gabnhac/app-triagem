@@ -5,6 +5,6 @@ export type OptionType = {
 export type InputSelectProps = {
     statement: string,
     options: OptionType[],
-    onSelect: (option: OptionType) => void,
+    onSelect: (prevOption: OptionType | null, option: OptionType) => void,
     isError?: boolean,
 }

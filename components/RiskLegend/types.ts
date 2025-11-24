@@ -14,14 +14,15 @@ export type CardiovascularDislipidemiaTypeLevels = 'Muito baixo' | 'Baixo' | 'Mo
 export type DiabetesLevels = 'Baixo' | 'Levemente elevado' | 'Moderado' | 'Alto' | 'Muito alto';
 export type ObesidadeLevels = 'Muito baixo' | 'Leve' | 'Moderado' | 'Alto' | 'Muito alto';
 export type HipetensaoLevels = 'Normal' | 'Acima do ideal' | 'Alta' | 'Bem elevada' | 'Muito alta' | 'Situação de emergência';
-export type DpocLevels = 'Poucos sintomas, baixo risco' | 'Poucos sintomas, alto risco' | 'Muitos sintomas, baixo risco' | 'Muitos sintomas, alto risco';
+export type DpocLevels = 'GOLD A - Poucos sintomas, baixo risco' | 'GOLD B - Poucos sintomas, alto risco' | 'GOLD C - Muitos sintomas, baixo risco' | 'GOLD D - Muitos sintomas, alto risco';
+export type AsmaLevels = 'Bem controlada' | 'Parcialmente controlada' | 'Não controlada';
 export type DorCronicaLevels = 'Leve' | 'Moderada' | 'Forte' | 'Muito forte';
 
 export const cardiovascular_dislipidemia_levels = ['Muito baixo', 'Baixo', 'Moderado', 'Alto', 'Muito alto'];
 export const diabetes_levels = ['Baixo', 'Levemente elevado', 'Moderado', 'Alto', 'Muito alto'];
 export const obesidade_levels = ['Muito baixo', 'Leve', 'Moderado', 'Alto', 'Muito alto'];
 export const hipetensao_levels = ['Normal', 'Acima do ideal', 'Alta', 'Bem elevada', 'Muito alta', 'Situação de emergência'];
-export const dpoc_levels = ['Poucos sintomas, baixo risco', 'Poucos sintomas, alto risco', 'Muitos sintomas, baixo risco', 'Muitos sintomas, alto risco'];
+export const dpoc_levels = ['GOLD A - Poucos sintomas, baixo risco', 'GOLD B - Poucos sintomas, alto risco', 'GOLD C - Muitos sintomas, baixo risco', 'GOLD D - Muitos sintomas, alto risco'];
 export const asma_levels = ['Bem controlada', 'Parcialmente controlada', 'Não controlada'];
 export const dor_cronica_levels = ['Leve', 'Moderada', 'Forte', 'Muito forte'];
 

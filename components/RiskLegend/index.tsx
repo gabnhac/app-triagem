@@ -59,8 +59,8 @@ const styles = StyleSheet.create({
     },
     riskWrapper: {
         paddingVertical: 5,
-        paddingHorizontal: 10,
-        borderRadius: 4,
+        paddingHorizontal: 15,
+        borderRadius: 8,
     },
     labelRisk: {
         fontSize: 16,
