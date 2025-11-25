@@ -1,15 +1,5 @@
-import { HealthRisk } from "../RiskLegend/types";
 
-export type RiskLegendResultProps = {
-    type: HealthRisk,
-    category: string,
-    riskIn10Years?: string,
-    tip?: string,
-    probability?: string,
-    score?: number,
-}
-
-export type RiskLegendResultPropsKeys = keyof RiskLegendResultProps;
+export type RiskLegendResultPropsKeys = 'type' | 'score' | 'tip' | 'riskIn10Years' | 'probability' | 'category';
 
 export const LabelsEnum: Record<RiskLegendResultPropsKeys, string> = {
     category: "Risco",

@@ -39,7 +39,8 @@ export function RiskLegend({ type, isSelected, onSelect }: RiskLegendProps) {
                                 </View>
                             </View>
                         ))}
-                    </View>}
+                    </View>
+                }
             </View>
         </View>
     )
@@ -80,8 +81,9 @@ const styles = StyleSheet.create({
         marginLeft: 5
     },
     riskLevel: {
-        padding: 5,
-        borderRadius: 4
+        paddingVertical: 5,
+        paddingHorizontal: 10,
+        borderRadius: 8
     },
     labelLevel: {
         fontSize: 14,

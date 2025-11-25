@@ -3,7 +3,7 @@ import { Input } from '@/components/Input';
 import { InputDate } from '@/components/InputDate';
 import { InputSelect } from '@/components/InputSelect/input';
 import { OptionType } from '@/components/InputSelect/input.types';
-import { RiskLegendResultProps } from '@/components/RiskLegendResult/index.types';
+import { RiskLegendResultProps } from '@/store/storeTypes';
 import { useAppStore } from '@/store/useAppStore';
 import theme from '@/theme';
 import { calculateRiskAsma } from '@/utils/Risks/asma/asma';
@@ -26,7 +26,7 @@ export default function InitialForm() {
     const router = useRouter();
 
     const {
-        setResultData
+        setResultData,
     } = useAppStore();
 
     const [formState, setFormState] = useState<FormState>({
@@ -176,7 +176,6 @@ export default function InitialForm() {
         }
 
         let params: RiskLegendResultProps[] = [];
-
         setFormErrors({} as FormStateError)
 
         const age = calculateAge(formState.birthDate);
@@ -208,7 +207,9 @@ export default function InitialForm() {
             category: riskCardiovascular.category,
             score: riskCardiovascular.score,
             riskIn10Years: riskCardiovascular.riskIn10Years,
-            type: 'cardiovascular'
+            type: 'cardiovascular',
+            probability: null,
+            tip: null
         });
 
         const scoreDislipidemia = calculateScoreCardiovascularAndDislipidemia({
@@ -228,7 +229,9 @@ export default function InitialForm() {
             category: riskDislipidemia.category,
             score: riskDislipidemia.score,
             riskIn10Years: riskDislipidemia.riskIn10Years,
-            type: 'dislipidemia'
+            type: 'dislipidemia',
+            probability: null,
+            tip: null
         });
 
         const scoreDiabetesTipo2 = calculateScoreDiabetesTipo2({
@@ -243,14 +246,14 @@ export default function InitialForm() {
             isMan: formState.isMan || true,
         })
         const riskDiabetesTipo2 = calculateRiskDiabetesTipo2(scoreDiabetesTipo2);
-        console.log("riskDiabetesTipo2", riskDiabetesTipo2);
 
         params.push({
             category: riskDiabetesTipo2.classification,
             score: riskDiabetesTipo2.score,
             probability: riskDiabetesTipo2.probability,
             type: 'diabetes_tipo2',
-            tip: riskDiabetesTipo2.tip
+            tip: riskDiabetesTipo2.tip,
+            riskIn10Years: null
         });
 
         const scoreObesidade = calculateScoreObesidade({
@@ -265,7 +268,10 @@ export default function InitialForm() {
         params.push({
             category: riskObesidade.classification,
             score: riskObesidade.score,
-            type: 'obesidade'
+            type: 'obesidade',
+            probability: null,
+            riskIn10Years: null,
+            tip: null
         });
 
         const riskHipertensao = calculateRiskHipertensao(bloodPressureCalculated);
@@ -273,7 +279,10 @@ export default function InitialForm() {
         params.push({
             category: riskHipertensao.classification,
             tip: riskHipertensao.tip,
-            type: 'hipertensao'
+            type: 'hipertensao',
+            probability: null,
+            riskIn10Years: null,
+            score: 0
         });
 
         const riskDpoc = calculateRiskDPOC({
@@ -285,7 +294,10 @@ export default function InitialForm() {
         params.push({
             category: riskDpoc.category,
             score: riskDpoc.score,
-            type: 'dpoc'
+            type: 'dpoc',
+            probability: null,
+            riskIn10Years: null,
+            tip: null
         });
 
         const riskAsma = calculateRiskAsma(formState.sumAsma);
@@ -293,7 +305,10 @@ export default function InitialForm() {
         params.push({
             category: riskAsma.category,
             score: riskAsma.score,
-            type: 'asma'
+            type: 'asma',
+            probability: null,
+            riskIn10Years: null,
+            tip: null
         });
 
         const riskDorCronica = calculateRiskDorCronica(formState.sumChronicPain);
@@ -301,21 +316,11 @@ export default function InitialForm() {
         params.push({
             category: riskDorCronica.category,
             score: riskDorCronica.score,
-            type: 'dor_cronica'
+            type: 'dor_cronica',
+            probability: null,
+            riskIn10Years: null,
+            tip: null
         });
-
-        // console.log("SUM ASMA", formState.sumAsma);
-        // console.log("SUM DPOC", formState.sumDPOC);
-        // console.log("SUM DOR CRONICA", formState.sumChronicPain);
-
-        // console.log("RISCO CARDIOVASCULAR", riskCardiovascular);
-        // console.log("RISCO DISLIPIDEMIA", riskDislipidemia);
-        // console.log("RISCO DIABETES TIPO 2", riskDiabetesTipo2);
-        // console.log("RISCO OBESIDADE", riskObesidade);
-        // console.log("RISCO HIPERTENSAO", riskHipertensao);
-        // console.log("RISCO DPOC", riskDpoc);
-        // console.log("RISCO ASMA", riskAsma);
-        // console.log("RISCO DOR CRONICA", riskDorCronica);
 
         setResultData(params);
 
@@ -1235,7 +1240,8 @@ export default function InitialForm() {
 
 const styles = StyleSheet.create({
     wrapper: {
-
+        flex: 1,
+        backgroundColor: theme.colors.background
     },
     calculateTouchable: {
         backgroundColor: theme.colors.blueDefault,

@@ -35,6 +35,7 @@ export default function Result() {
                         score={item.score}
                         riskIn10Years={item.riskIn10Years}
                         type={item.type}
+                        probability={item.probability}
                         tip={item.tip}
                     />
                 ))}

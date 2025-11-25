@@ -1,5 +1,5 @@
-import { RiskLegendResultProps } from "@/components/RiskLegendResult/index.types";
 import { create } from "zustand";
+import { RiskLegendResultProps } from "./storeTypes";
 
 type State = {
     resultData: RiskLegendResultProps[];
@@ -11,8 +11,8 @@ type Actions = {
 
 
 export const useAppStore = create<State & Actions>((set) => ({
-    resultData: [] as RiskLegendResultProps[],
+    resultData: [],
 
-    setResultData: (data) => set({ resultData: data }),
+    setResultData: (data) => set(() => ({ resultData: data })),
 
 }));

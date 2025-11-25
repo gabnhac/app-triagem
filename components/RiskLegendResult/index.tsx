@@ -1,17 +1,12 @@
+import { RiskLegendResultProps } from "@/store/storeTypes";
 import { StyleSheet, Text, View } from "react-native";
 import theme from '../../theme';
 import { RiskColorEnum, RiskLabelEnum } from "../RiskLegend/types";
-import { LabelsEnum, RiskLegendResultProps, RiskLegendResultPropsKeys } from "./index.types";
+import { LabelsEnum, RiskLegendResultPropsKeys } from "./index.types";
 
 export function RiskLegendResult(data: RiskLegendResultProps) {
 
-    const validData = Object.entries(data).filter(([key, value]) => {
-        if (key === 'type') return false;
-        if (value === null || value === undefined) return false;
-        return true;
-    });
-
-    console.log("VALID DATA", validData)
+    const validData = Object.entries(data).filter(([key, value]) => key !== 'type' && value !== null);
 
     return (
         <View style={styles.wrapper}>
@@ -51,7 +46,6 @@ const styles = StyleSheet.create({
     wrapper: {
         width: '100%',
         flexDirection: 'column',
-        marginBottom: 15,
     },
     headerWrapper: {
         flexDirection: 'row',
@@ -74,7 +68,7 @@ const styles = StyleSheet.create({
         paddingRight: 10,
     },
     secondWrapper: {
-        flex: 0.6,
+        flex: 0.5,
         alignItems: 'flex-end',
     },
     textLabel: {

@@ -3,7 +3,6 @@ import { RiskResultTypeDorCronica } from "./@types";
 
 export function calculateRiskDorCronica(score: number): RiskResultTypeDorCronica {
     let risk: DorCronicaLevels = 'Leve';
-    console.log("SCORE", score)
 
     if (score >= 9 && score <= 17) {
         risk = 'Moderada'
