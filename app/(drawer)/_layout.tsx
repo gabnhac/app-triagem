@@ -2,9 +2,10 @@ import { Drawer } from 'expo-router/drawer';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
-import theme from '../theme';
+
 
 import { Icon } from '@/components/Icon';
+import theme from '@/theme';
 import { StyleSheet, View } from 'react-native';
 
 export const unstable_settings = {
@@ -31,7 +32,7 @@ export default function RootLayout() {
             color='#FFF'
           /> : <View style={{ width: 20, height: 20 }} />
         }}>
-        <Screen name="journey-form" options={{
+        <Screen name="form" options={{
           drawerLabel: "Formulário de riscos",
           headerTitle: "Formulário de riscos",
           headerStyle: {
@@ -41,7 +42,7 @@ export default function RootLayout() {
           },
           headerTintColor: theme.colors.white
         }} />
-        <Screen name="index" options={{
+        <Screen name="legends" options={{
           drawerLabel: "Legendas de riscos",
           headerTitle: "Apresentação",
           headerStyle: {
