@@ -31,18 +31,8 @@ export default function RootLayout() {
             color='#FFF'
           /> : <View style={{ width: 20, height: 20 }} />
         }}>
-        <Screen name="index" options={{
-          drawerLabel: "Apresentação",
-          headerTitle: "Apresentação",
-          headerStyle: {
-            backgroundColor: theme.colors.blueDefault,
-            borderBottomLeftRadius: 10,
-            borderBottomRightRadius: 10
-          },
-          headerTintColor: theme.colors.white
-        }} />
         <Screen name="journey-form" options={{
-          drawerLabel: "Calcule possíveis riscos",
+          drawerLabel: "Formulário de riscos",
           headerTitle: "Formulário de riscos",
           headerStyle: {
             backgroundColor: theme.colors.blueDefault,
@@ -51,6 +41,17 @@ export default function RootLayout() {
           },
           headerTintColor: theme.colors.white
         }} />
+        <Screen name="index" options={{
+          drawerLabel: "Legendas de riscos",
+          headerTitle: "Apresentação",
+          headerStyle: {
+            backgroundColor: theme.colors.blueDefault,
+            borderBottomLeftRadius: 10,
+            borderBottomRightRadius: 10
+          },
+          headerTintColor: theme.colors.white
+        }} />
+
       </Drawer>
       <StatusBar style="light" />
       <Toast position='bottom' />
