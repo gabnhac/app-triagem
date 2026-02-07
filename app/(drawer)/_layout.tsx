@@ -8,10 +8,6 @@ import { Icon } from '@/components/Icon';
 import theme from '@/theme';
 import { StyleSheet, View } from 'react-native';
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
 export default function RootLayout() {
 
   const { Screen } = Drawer;

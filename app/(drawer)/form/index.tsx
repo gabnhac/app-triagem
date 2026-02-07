@@ -324,7 +324,7 @@ export default function InitialForm() {
 
     setResultData(params);
 
-    router.push('/form/results');
+    router.push('/(drawer)/form/results');
   }
 
   const options0to5 = [
